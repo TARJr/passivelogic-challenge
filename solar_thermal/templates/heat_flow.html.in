@@ -1,0 +1,51 @@
+<div id="solar-heat-view">
+  <style>
+    #solar-heat-view { color: var(--foreground); width: 100%; }
+    #solar-heat-view .heat-heading { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+    #solar-heat-view .heat-heading h3 { margin: 0; }
+    #solar-heat-view .heat-schematic { display: block; width: 100%; overflow: visible; }
+    #solar-heat-view .heat-schematic text { fill: var(--foreground); font-family: inherit; font-size: var(--font-size-base); font-weight: 400; }
+    #solar-heat-view .heat-schematic .sub { fill: var(--muted-foreground); }
+    #solar-heat-view .heat-schematic .value { font-weight: 500; font-variant-numeric: tabular-nums; }
+    #solar-heat-view .heat-timeline { display: grid; gap: 8px; }
+    #solar-heat-view .heat-timeline label { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+    #solar-heat-view .heat-bottom { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; }
+    #solar-heat-view .heat-legend { display: inline-flex; align-items: center; gap: 8px; }
+    #solar-heat-view .heat-scale { width: 64px; height: 8px; background: linear-gradient(to right, var(--blue), var(--orange)); }
+    #solar-heat-view .heat-stage { width: 100%; }
+    #solar-heat-view .heat-state { min-height: 1.5em; }
+  </style>
+  <div class="heat-heading">
+    <h3>Solar heat transfer</h3>
+    <span class="text-small">Day playback · °F · US gallons</span>
+  </div>
+  <div class="viz-controls">
+    <label class="form-label">Scenario
+      <select class="form-select" data-scenario aria-label="Weather and pump scenario"></select>
+    </label>
+  </div>
+  <div class="heat-stage">
+    <svg class="heat-schematic" role="img" aria-label="Solar collector, pump and mixed storage tank, with water circulation and signed heat transfer"></svg>
+  </div>
+  <div class="heat-timeline">
+    <label for="heat-time"><span>Simulation time</span><output class="tabular-nums" data-clock>09:00</output></label>
+    <input class="form-range" id="heat-time" data-time type="range" min="0" max="86400" value="32400" step="1" aria-label="Simulation time">
+  </div>
+  <div class="viz-controls">
+    <button class="btn btn-primary" type="button" data-play>Play</button>
+    <label class="form-label">Full run playback
+      <select class="form-select" data-speed>
+        <option value="300">24 hours in 4 min 48 sec</option>
+        <option value="1800" selected>24 hours in 48 sec</option>
+        <option value="3600">24 hours in 24 sec</option>
+      </select>
+    </label>
+  </div>
+  <div class="heat-bottom text-small">
+    <span class="heat-state" data-state>Collector heats tank</span>
+    <span class="heat-legend">Cooler <span class="heat-scale" aria-hidden="true"></span> Warmer</span>
+  </div>
+  <div class="sr-only" aria-live="polite" data-announcement></div>
+  <script type="application/json" data-payload>__SOLAR_PAYLOAD__</script>
+  <script>__SOLAR_SCRIPT__</script>
+</div>

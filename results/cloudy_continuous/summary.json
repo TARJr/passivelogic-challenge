@@ -1,0 +1,20 @@
+{
+  "absorbed_solar_kwh": 12.626535106948712,
+  "collector_loss_kwh": 7.737131389397399,
+  "duration_hours": 24.0,
+  "final_collector_c": 35.36924606724653,
+  "final_tank_c": 37.778710350231115,
+  "incident_solar_kwh": 16.83538014259829,
+  "max_balance_residual_j": 5.21540641784668e-08,
+  "net_heat_to_tank_kwh": 4.82536519227113,
+  "peak_collector_c": 55.47454106181103,
+  "peak_tank_c": 50.27694839821846,
+  "pump_electricity_kwh": 0.6000000000000001,
+  "pump_runtime_hours": 24.0,
+  "pump_starts": 1,
+  "relative_balance_error": 1.1473646512574462e-15,
+  "solver_evaluations": 21786,
+  "stored_energy_change_kwh": 4.192650151056086,
+  "tank_energy_change_kwh": 4.128611625775893,
+  "tank_loss_kwh": 0.6967535664952246
+}

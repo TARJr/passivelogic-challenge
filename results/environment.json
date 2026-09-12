@@ -1,0 +1,16 @@
+{
+  "python": "3.12.14",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "packages": {
+    "numpy": "2.5.3",
+    "scipy": "1.18.1",
+    "matplotlib": "3.11.2"
+  },
+  "scenario_files": {
+    "clear_differential": "clear_day.json",
+    "clear_continuous": "clear_continuous.json",
+    "cloudy_differential": "cloudy_day.json",
+    "cloudy_continuous": "cloudy_continuous.json"
+  },
+  "verification": "Each baseline compared with half max_step_s and 10x tighter tolerances; see verification.json"
+}
