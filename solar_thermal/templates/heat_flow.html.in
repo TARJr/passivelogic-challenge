@@ -14,6 +14,11 @@
     #solar-heat-view .heat-scale { width: 64px; height: 8px; background: linear-gradient(to right, var(--blue), var(--orange)); }
     #solar-heat-view .heat-stage { width: 100%; }
     #solar-heat-view .heat-state { min-height: 1.5em; }
+    #solar-heat-view .heat-readouts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 12px; margin: 0 0 12px; }
+    #solar-heat-view .heat-readouts > div { padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+    #solar-heat-view .heat-readouts dt { color: var(--muted-foreground); }
+    #solar-heat-view .heat-readouts dd { margin: 4px 0; font-size: 1.25rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+    #solar-heat-view .heat-rate-note { margin: 0 0 12px; }
   </style>
   <div class="heat-heading">
     <h3>Solar heat transfer</h3>
@@ -24,15 +29,30 @@
       <select class="form-select" data-scenario aria-label="Weather and pump scenario"></select>
     </label>
   </div>
+  <div role="status" data-playback-state>Playback paused · 9:00 AM</div>
+  <div class="text-small">Pump ON/OFF describes the simulated system at the selected time. Press Play to animate.</div>
   <div class="heat-stage">
     <svg class="heat-schematic" role="img" aria-label="Solar collector, pump and mixed storage tank, with water circulation and signed heat transfer"></svg>
   </div>
+  <dl class="heat-readouts">
+    <div>
+      <dt data-tank-net-label>Total tank heating / cooling now</dt>
+      <dd data-tank-net>—</dd>
+      <div class="text-small">Includes circulation and direct heat exchange with air.</div>
+    </div>
+    <div>
+      <dt>Tank energy change since start</dt>
+      <dd data-tank-energy>—</dd>
+      <div class="text-small">Positive means more energy stored than at the start.</div>
+    </div>
+  </dl>
+  <p class="heat-rate-note text-small">W and kW show heat flow at the selected time. kWh shows energy change accumulated since the start.</p>
   <div class="heat-timeline">
-    <label for="heat-time"><span>Simulation time</span><output class="tabular-nums" data-clock>09:00</output></label>
+    <label for="heat-time"><span>Simulation time</span><output class="tabular-nums" data-clock>9:00 AM</output></label>
     <input class="form-range" id="heat-time" data-time type="range" min="0" max="86400" value="32400" step="1" aria-label="Simulation time">
   </div>
   <div class="viz-controls">
-    <button class="btn btn-primary" type="button" data-play>Play</button>
+    <button class="btn btn-primary" type="button" data-play>Play simulation</button>
     <label class="form-label">Full run playback
       <select class="form-select" data-speed>
         <option value="300">24 hours in 4 min 48 sec</option>

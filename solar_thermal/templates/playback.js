@@ -36,6 +36,7 @@
     const tankLoss = c.tank_loss_w_k * (tt - c.ambient_c);
     const capacity = c.tank_volume_l / 1000 * c.water_density_kg_m3 * c.water_cp_j_kgk;
     return {time: t, tc, tt, radiation, on, flow, absorbed, transfer, collectorLoss, tankLoss,
+      tankNetW: transfer - tankLoss,
       tankEnergyKwh: capacity * (tt - c.initial_tank_c) / 3.6e6};
   }
 
@@ -74,8 +75,8 @@
   const temperatureColor = temp => `color-mix(in oklab, var(--blue), var(--orange) ${Math.min(100, Math.max(0, (temp - 20) / 60 * 100))}%)`;
   const watts = w => Math.abs(w) >= 1000 ? `${(Math.abs(w) / 1000).toFixed(2)} kW` : `${Math.abs(w).toFixed(0)} W`;
   function clock(t) {
-    const minutes = Math.floor(t / 60), hours = Math.floor(minutes / 60);
-    return `${String(hours).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+    const minutes = Math.floor(t / 60), hours = Math.floor(minutes / 60) % 24;
+    return `${hours % 12 || 12}:${String(minutes % 60).padStart(2, "0")} ${hours < 12 ? "AM" : "PM"}`;
   }
 
   function durationLabel(seconds) {
@@ -107,8 +108,8 @@
     node("desc", {}).textContent = "Water flows from the solar collector through the pump into the tank, returning along the lower pipe. Temperatures are Fahrenheit, tank volume is US gallons, and flow is US gallons per minute. The tank is a uniform mixed volume.";
     const defs = node("defs");
     const marker = node("marker", {id:"heat-arrow-head", viewBox:"0 0 8 8", refX:7, refY:4,
-      markerWidth:7, markerHeight:7, orient:"auto-start-reverse", markerUnits:"userSpaceOnUse"}, defs);
-    node("path", {d:"M0 0 L8 4 L0 8", fill:"var(--orange)"}, marker);
+      markerWidth:14, markerHeight:14, orient:"auto-start-reverse", markerUnits:"userSpaceOnUse"}, defs);
+    node("path", {d:"M0 0 L8 4 L0 8 Z", fill:"var(--blue)"}, marker);
 
     parts.sun = node("circle", {cx:cx, cy:36, r:17, fill:"var(--orange)"});
     parts.sunText = label(cx + 30, 32, "", "value", "start");
@@ -135,8 +136,8 @@
     label(tx, 270, "Mixed", "sub");
     parts.collectorLoss = label(cx, 368, "", "sub");
     parts.tankLoss = label(tx, 368, "", "sub");
-    parts.stored = label(tx, 391, "", "value");
-    label(cx, 391, "Loss to ambient", "sub");
+    parts.collectorAirLabel = label(cx, 391, "", "sub");
+    parts.tankAirLabel = label(tx, 391, "", "sub");
 
     parts.dots = [];
     for (const line of [parts.hot, parts.returnPipe, parts.coil]) {
@@ -159,14 +160,19 @@
     parts.heatTitle = label(w/2, heatY-20, "", "value");
     parts.heatValue = label(w/2, heatY+1, "", "value");
     const half = mobile ? Math.min(88,w*.25) : Math.max(45, (tx-cx-cw-tw)/2);
-    parts.heatPath = path(`M${w/2-half} ${heatY+16} H${w/2+half}`, "var(--orange)", 3);
-    parts.heatDot = node("circle", {r:4, fill:"var(--orange)"});
+    const gradient = node("linearGradient", {id:"heat-flow-gradient", gradientUnits:"userSpaceOnUse",
+      x1:w/2-half, y1:heatY+16, x2:w/2+half, y2:heatY+16}, defs);
+    parts.heatLeft = node("stop", {offset:"0%"}, gradient);
+    parts.heatRight = node("stop", {offset:"100%"}, gradient);
+    parts.heatPath = path(`M${w/2-half} ${heatY+16} H${w/2+half}`, "url(#heat-flow-gradient)", 5);
+    parts.heatDot = node("circle", {r:5, fill:"url(#heat-flow-gradient)"});
     layout.heatY = heatY+16; layout.heatHalf = half;
     render();
   }
 
   function render() {
     const s = sampleScenario(scenario, time);
+    q("[data-playback-state]").textContent = `Playback ${playing ? "running" : time >= scenario.config.duration_s ? "complete" : "paused"} · ${clock(time)} · ${s.radiation.toFixed(0)} W/m² sunlight`;
     q("[data-clock]").textContent = clock(time);
     slider.value = time;
     slider.setAttribute("aria-valuetext", clock(time));
@@ -182,14 +188,22 @@
     parts.hot.setAttribute("stroke", tcColor);
     parts.returnPipe.setAttribute("stroke", ttColor);
     parts.tank.setAttribute("fill", ttColor);
-    parts.collectorLoss.textContent = `${watts(s.collectorLoss)} ${s.collectorLoss >= 0 ? "lost" : "gained"}`;
-    parts.tankLoss.textContent = `${watts(s.tankLoss)} ${s.tankLoss >= 0 ? "lost" : "gained"}`;
-    parts.stored.textContent = `${s.tankEnergyKwh >= 0 ? "+" : ""}${s.tankEnergyKwh.toFixed(2)} kWh`;
-    parts.pumpText.textContent = s.on ? "Pump ON" : "Pump OFF";
+    parts.collectorLoss.textContent = `${watts(s.collectorLoss)} ${s.collectorLoss >= 0 ? "to air" : "from air"}`;
+    parts.tankLoss.textContent = `${watts(s.tankLoss)} ${s.tankLoss >= 0 ? "to air" : "from air"}`;
+    parts.collectorAirLabel.textContent = s.collectorLoss >= 0 ? "Direct heat loss" : "Direct heat gain";
+    parts.tankAirLabel.textContent = s.tankLoss >= 0 ? "Direct heat loss" : "Direct heat gain";
+    q("[data-tank-net-label]").textContent = s.tankNetW > 0 ? "Total tank heating now" : s.tankNetW < 0 ? "Total tank cooling now" : "Tank energy steady now";
+    q("[data-tank-net]").textContent = watts(s.tankNetW);
+    q("[data-tank-energy]").textContent = `${s.tankEnergyKwh >= 0 ? "+" : ""}${s.tankEnergyKwh.toFixed(2)} kWh`;
+    parts.pumpText.textContent = s.on ? (playing ? "Pump ON" : time >= scenario.config.duration_s ? "Pump ON · ended" : "Paused") : "Pump OFF";
     parts.flowText.textContent = s.on ? `${displayUnits.usGpm(s.flow, scenario.config.water_density_kg_m3).toFixed(2)} gpm →` : "No flow";
     const heatActive = Math.abs(s.transfer) >= .5;
-    parts.heatTitle.textContent = !s.on ? "Loop stopped" : !heatActive ? "Equal temperatures" : s.transfer > 0 ? "Heat → tank" : "Heat → collector";
-    parts.heatValue.textContent = `${watts(s.transfer)} transferred`;
+    parts.heatTitle.textContent = !s.on ? "Loop stopped" : !heatActive ? "Negligible heat flow" : s.transfer > 0 ? "Heat → tank" : "Heat → collector";
+    parts.heatValue.textContent = `${watts(s.transfer)} flowing now`;
+    const warm = "var(--red, #e16d60)", cool = "var(--blue)";
+    const equal = "color-mix(in srgb, var(--red, #e16d60), var(--blue))";
+    parts.heatLeft.setAttribute("stop-color", s.tc === s.tt ? equal : s.tc > s.tt ? warm : cool);
+    parts.heatRight.setAttribute("stop-color", s.tc === s.tt ? equal : s.tc > s.tt ? cool : warm);
     parts.heatPath.setAttribute("opacity", heatActive ? 1 : .2);
     parts.heatPath.removeAttribute("marker-start"); parts.heatPath.removeAttribute("marker-end");
     if (heatActive) parts.heatPath.setAttribute(s.transfer>0 ? "marker-end" : "marker-start", "url(#heat-arrow-head)");
@@ -204,19 +218,19 @@
       dot.el.setAttribute("opacity", s.on ? 1 : 0);
     }
     parts.rotor.setAttribute("transform",`rotate(${s.on ? phase*180 : 0} ${layout.mid} ${layout.top})`);
-    const status = !s.on ? "Pump stopped · no loop heat transfer" : s.transfer<-.5 ? "Tank is losing heat through the collector" : s.transfer>.5 ? "Collector heats tank" : "Water circulating · no net heat transfer";
+    const status = !s.on ? "Pump stopped · no loop heat transfer" : s.transfer<-.5 ? "Tank is losing heat through the collector" : s.transfer>.5 ? "Heat flows from collector to tank" : "Water circulating · negligible loop heat transfer";
     q("[data-state]").textContent = status;
     return s;
   }
 
   function announce() {
     const s = sampleScenario(scenario,time);
-    q("[data-announcement]").textContent = `${clock(time)}. Collector ${displayUnits.fahrenheit(s.tc).toFixed(1)} degrees Fahrenheit. Tank ${displayUnits.fahrenheit(s.tt).toFixed(1)} degrees Fahrenheit. Pump ${s.on?"on":"off"}. Flow ${displayUnits.usGpm(s.flow, scenario.config.water_density_kg_m3).toFixed(2)} US gallons per minute. ${watts(s.transfer)} transferred ${s.transfer<0?"to collector":"to tank"}.`;
+    q("[data-announcement]").textContent = `${clock(time)}. Collector ${displayUnits.fahrenheit(s.tc).toFixed(1)} degrees Fahrenheit. Tank ${displayUnits.fahrenheit(s.tt).toFixed(1)} degrees Fahrenheit. Pump ${s.on?"on":"off"}. Flow ${displayUnits.usGpm(s.flow, scenario.config.water_density_kg_m3).toFixed(2)} US gallons per minute. ${watts(s.transfer)} flowing ${s.transfer<0?"to collector":"to tank"} now. ${q("[data-tank-net-label]").textContent}: ${q("[data-tank-net]").textContent}. Tank energy change since start: ${q("[data-tank-energy]").textContent}.`;
   }
   function stop() {
-    playing=false; playButton.textContent="Play";
+    playing=false; playButton.textContent="Play simulation";
     if (frameId) cancelAnimationFrame(frameId);
-    frameId=0; announce();
+    frameId=0; render(); announce();
   }
   function tick(now) {
     if (!playing || !root.isConnected) return;
@@ -230,8 +244,8 @@
   }
   function play() {
     if(time>=scenario.config.duration_s) time=0;
-    playing=true; playButton.textContent="Pause";
-    lastFrame=performance.now(); frameId=requestAnimationFrame(tick); announce();
+    playing=true; playButton.textContent="Pause simulation";
+    lastFrame=performance.now(); frameId=requestAnimationFrame(tick); render(); announce();
   }
 
   payload.scenarios.forEach(s => {
