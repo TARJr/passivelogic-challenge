@@ -6,6 +6,20 @@ Verified on 2026-09-11 with Python 3.12.14. Exact package versions are saved in
 
 ## Checks performed
 
+### Reviewer setup check (2026-09-12)
+
+A fresh Python 3.12 virtual environment installed every dependency from
+`requirements-lock.txt`. The submission ZIP was extracted into a separate
+temporary folder, without the development environment or Git metadata.
+From that extracted copy, `pip check` found no broken requirements, all 46
+Python tests passed, and `python run.py --output results/reviewer-run`
+generated the report after all four scenarios passed numerical refinement.
+This installation/run check was performed on macOS Apple Silicon. Windows
+and Linux setup commands are documented but have not been executed on those
+platforms.
+
+### Model and presentation checks
+
 `python -m pytest -q` completed with **46 tests passing**. The suite covers
 analytical cooling, isolated-system equilibration, constant-sun steady state,
 equilibrium at ambient, reverse heat flow, no flow, pump thresholds and initial

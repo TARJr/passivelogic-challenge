@@ -6,25 +6,39 @@ The model is intended for transparent comparison of controls, energy accounting,
 
 See the [model derivation](docs/model.md), [validation and example results](docs/validation.md), and [generated report](results/index.html).
 
-## Setup
+## Quick preview — no installation
 
-Use Python 3.10 or newer. From the repository root:
+Download the repository using GitHub's **Code → Download ZIP**, then extract it. Open `results/index.html` in a modern browser. This is a saved simulation run: press **Play simulation** to animate it, or open **Graphs and data** to inspect the plots and CSV/JSON exports.
+
+The preview requires no Python, Node.js, web server, account, API key, or internet connection. To calculate new results or change the inputs, follow the setup below.
+
+## Run the simulation
+
+Use **Python 3.12**, the version used for the checked-in results. Open a terminal in the extracted repository folder (the folder containing `run.py`). The following commands create an isolated environment and install the exact recorded dependency versions. Internet access is required for the initial dependency download.
+
+### macOS / Linux
 
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate       # Windows: .venv\Scripts\activate
-python -m pip install -r requirements.txt
+.venv/bin/python -m pip install -r requirements-lock.txt
+.venv/bin/python run.py
 ```
 
-`requirements.txt` keeps the supported dependency ranges flexible. For a reproducible environment matching the checked-in run, use Python 3.12 and install `requirements-lock.txt` instead.
+Check `python3 --version` first; use `python3.12` in the first command if you have multiple Python versions installed.
 
-After setup, run the complete example/report workflow with one command:
+### Windows PowerShell
 
-```bash
-python run.py
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-lock.txt
+.\.venv\Scripts\python.exe run.py
 ```
 
-The command does not start a web server. Open `results/index.html` to see the solar collector, pump, circulating water, and storage tank. Press **Play**, drag the time slider, or choose another scenario. The visual shows component temperatures, solar heat input, losses, and the signed heat transfer between collector and tank. **Graphs and data** opens the supporting report at `results/report.html`.
+These commands do not require environment activation or PowerShell execution-policy changes. `requirements.txt` provides flexible version ranges for other environments; Python 3.12 with `requirements-lock.txt` is the reproducibility path.
+
+Successful execution prints four scenario results with `convergence PASS`, followed by the report path. It regenerates `results/`; use `--output results/reviewer-run` to retain the original example files. Open or refresh the generated `index.html` after a run.
+
+The command does not start a web server. Open `results/index.html` to see the solar collector, pump, circulating water, and storage tank. Press **Play simulation**, drag the time slider, or choose another scenario. Playback initially pauses at 9 AM; displayed values describe the simulated state at that time. The visual shows component temperatures, solar heat input, losses, and the signed heat transfer between collector and tank. **Graphs and data** opens the supporting report at `results/report.html`.
 
 Playback uses the computed Python results, interpolating temperatures between output samples and preserving exact pump-switch times and temperatures. It does not run a separate JavaScript physics solver. Water dots illustrate circulation, not a modeled pipe transit time. Tank color is uniform because the tank is well mixed; color indicates temperature, not a changing water level. Edit a JSON configuration and rerun Python to change physical parameters.
 
@@ -32,11 +46,19 @@ All results are offline and require no external assets. The viewer uses JavaScri
 
 For a web preview, select `results/index.html`. The `.html.in` source template is populated by the generator and cannot run on its own. The old `solar_thermal/templates/heat_flow.html` preview path now links to the complete simulator.
 
-Run the test suite with:
+Run the Python test suite with:
 
 ```bash
-python -m pytest -q
+.venv/bin/python -m pytest -q
 ```
+
+On Windows, use `.\.venv\Scripts\python.exe -m pytest -q` instead. Optional playback tests require Node.js 20 or newer: `node --test tests/playback.test.cjs`. Node.js is not needed for the simulation or browser preview.
+
+In the remaining examples, `python` means the environment's Python executable (`.venv/bin/python` on macOS/Linux or `.\.venv\Scripts\python.exe` on Windows).
+
+## Technology choices
+
+Python owns the physics and exports: NumPy stores numerical arrays, SciPy integrates the energy balances and controller events, and Matplotlib generates the charts. The viewer is plain HTML, CSS, SVG, and JavaScript with its data embedded in the page. There is no frontend build step or separate browser physics model. Pytest covers the Python implementation; Node's built-in test runner checks playback logic.
 
 ## Custom configuration
 
