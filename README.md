@@ -2,6 +2,14 @@
 
 This repository contains a small, auditable solar-thermal simulation. It models one mixed-temperature solar collector and one well-mixed hot-water tank over a configurable time interval. The default command runs illustrative clear and cloudy day scenarios with differential and continuous pump operation, then writes an animated system view and supporting plots under `results/`.
 
+## Reviewer guide
+
+| Exercise evaluation criterion | Where to look |
+| --- | --- |
+| Thermodynamic correctness | [Model equations and assumptions](docs/model.md), [physics tests](tests/test_physics.py), and [numerical verification results](results/verification.json). |
+| Code approach | [Simulation modules](solar_thermal/), [run entry point](run.py), and the [code organization overview](#code-organization). |
+| Results | [Animated simulation](results/index.html) and [graphs and data](results/report.html). Download or clone the repository and open these HTML files locally. |
+
 The model is intended for transparent comparison of controls, energy accounting, and numerical behavior. Its defaults are illustrative and are not calibrated manufacturer data. It is not a replacement for a detailed collector rating model, a plant-loop model, or a validated design calculation.
 
 See the [model derivation](docs/model.md), [validation and example results](docs/validation.md), and [generated report](results/index.html).
