@@ -148,6 +148,10 @@
   const temperatureColor = temp => `color-mix(in oklab, var(--blue), var(--orange) ${Math.min(100, Math.max(0, (temp - 20) / 60 * 100))}%)`;
   const watts = w => Math.abs(w) >= 1000 ? `${(Math.abs(w) / 1000).toFixed(2)} kW` : `${Math.abs(w).toFixed(0)} W`;
   function clock(t) {
+    if (t > 0 && t % 86400 === 0) {
+      const day = t / 86400;
+      return `End of day${day > 1 ? ` ${day}` : ""} · ${t / 3600} hours elapsed`;
+    }
     const minutes = Math.floor(t / 60), hours = Math.floor(minutes / 60) % 24;
     return `${hours % 12 || 12}:${String(minutes % 60).padStart(2, "0")} ${hours < 12 ? "AM" : "PM"}`;
   }
